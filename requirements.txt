@@ -1,0 +1,12 @@
+streamlit
+fastapi
+uvicorn
+python-multipart
+pytesseract
+pillow
+pypdf2
+fpdf2
+pandas
+networkx
+matplotlib
+requests
