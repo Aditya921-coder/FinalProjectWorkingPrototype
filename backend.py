@@ -1,5 +1,3 @@
-#Initialize the file with the command: 'uvicorn backend:app --reload' in one terminal instance
-
 import os
 import shutil
 import platform
