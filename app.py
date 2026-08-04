@@ -1,11 +1,19 @@
-#Initialize the file with the command: 'streamlit run app.py' in one terminal instance
-
 import io
 import requests
 import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
 from fpdf import FPDF
+import subprocess
+import time
+
+# Auto-start FastAPI backend when deployed on Streamlit Cloud
+@st.cache_resource
+def start_backend():
+    subprocess.Popen(["uvicorn", "backend:app", "--host", "127.0.0.1", "--port", "8000"])
+    time.sleep(2)
+
+start_backend()
 
 # Set Page Config
 st.set_page_config(
