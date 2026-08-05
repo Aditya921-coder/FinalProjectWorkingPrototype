@@ -4,12 +4,18 @@ import sys
 import socket
 import subprocess
 import time
+import sqlite3
 import requests
 import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+
+# MUST BE DEFINED AT TOP LEVEL BEFORE ANY TAB OR UI ACCESS
+def get_db_connection():
+    """Returns a direct SQLite database connection for Streamlit Cloud runtime."""
+    return sqlite3.connect('database.db')
 
 # Check if local port is bound
 def is_port_open(port=8000):
@@ -311,7 +317,7 @@ elif page == "2. Mind Map & Investigation Hub":
             st.error(f"Backend server unreachable: {e}")
 
 # -------------------------------------------------------------
-# PHASE 3: CASE ARCHIVE & SEARCH (FIXED Routing from 'if' to 'elif')
+# PHASE 3: CASE ARCHIVE & SEARCH
 # -------------------------------------------------------------
 elif page == "3. Case Archive & Search":
     st.header("Phase 3: Database Search & Filtering Hub")
@@ -345,6 +351,7 @@ elif page == "3. Case Archive & Search":
             
     except Exception as e:
         st.error(f"Error querying local database: {e}")
+
 # -------------------------------------------------------------
 # PHASE 4: SUMMARIZATION & PDF REPORT
 # -------------------------------------------------------------
