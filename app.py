@@ -291,7 +291,9 @@ elif page == "2. Mind Map & Investigation Hub":
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
-                                    res = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
+                                    # Explicitly pass data as dict for form-encoded payload
+                                    payload = {"case_id": str(case_id_input), "entry": str(diary_text)}
+                                    res = requests.post(f"{API_URL}/save_diary", data=payload)
                                     if res.status_code == 200:
                                         st.success("Case diary entry successfully logged to backend database!")
                                         st.rerun()
@@ -318,7 +320,8 @@ elif page == "3. Case Archive & Search":
     search_query = st.text_input("🔍 Filter by Case ID, Victim Name, FIR, or ACK Number:", "")
     
     try:
-        res = requests.get(f"{API_URL}/search_cases", params={"query": search_query if search_query else ""})
+        # Direct URL string formatting avoids 404 query encoding errors
+        res = requests.get(f"{API_URL}/search_cases?query={search_query.strip()}")
         if res.status_code == 200:
             cases_data = res.json()
             if cases_data:
