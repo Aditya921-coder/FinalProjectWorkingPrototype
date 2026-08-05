@@ -150,49 +150,11 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
         }
     }
 
-@app.post("/save_case")
-def save_case(
-    case_id: str = Form(...), 
-    ack_no: str = Form(...), 
-    fir_no: str = Form(...),
-    victim_name: str = Form(...), 
-    victim_phone: str = Form(...), 
-    suspect_phone: str = Form(...),
-    disputed_amount: str = Form(...),
-    priority: str = Form(...), 
-    data_hash: str = Form(...)
-):
-    try:
-        amt = float(disputed_amount)
-    except (ValueError, TypeError):
-        amt = 0.0
-
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    
-    c.execute('''INSERT OR REPLACE INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-              (case_id, ack_no, fir_no, victim_name, victim_phone, suspect_phone, 
-               amt, priority, "In Investigation", datetime.now().strftime("%Y-%m-%d %H:%M:%S"), data_hash))
-    
-    c.execute("DELETE FROM transactions WHERE case_id=?", (case_id,))
-    c.execute('''INSERT INTO transactions (case_id, sender, receiver, amount, layer) VALUES 
-                (?, 'Victim (' || ? || ')', 'Layer 1: XYZ Bank (Fraudulent)', ?, 'Layer 1'),
-                (?, 'Layer 1: XYZ Bank (Fraudulent)', 'Layer 2: ICICI Bank', ?, 'Layer 2'),
-                (?, 'Layer 1: XYZ Bank (Fraudulent)', 'ATM Cash Withdrawal (Delhi)', ?, 'ATM')''',
-              (case_id, victim_name, amt, case_id, amt * 0.6, case_id, amt * 0.4))
-    
-    conn.commit()
-    conn.close()
-
-    log_audit_action(case_id, "Saved Case Details & Generated Fund Flow Trail")
-
-    return {"status": "Case Created Successfully"}
-
 @app.get("/search_cases")
 def search_cases(query: str = ""):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    search_pattern = f"%{query}%"
+    search_pattern = f"%{query}%" if query else "%"
     c.execute("""
         SELECT case_id, victim_name, disputed_amount, priority, status, created_at, data_hash 
         FROM cases 
@@ -207,6 +169,40 @@ def search_cases(query: str = ""):
             "priority": r[3], "status": r[4], "created_at": r[5], "data_hash": r[6]
         } for r in rows
     ]
+
+# 2. Save Case Endpoint (Form Data compatible)
+@app.post("/save_case")
+def save_case(
+    case_id: str = Form(...),
+    ack_no: str = Form(""),
+    fir_no: str = Form(""),
+    victim_name: str = Form(""),
+    victim_phone: str = Form(""),
+    suspect_phone: str = Form(""),
+    disputed_amount: str = Form("0.0"),
+    priority: str = Form("High"),
+    data_hash: str = Form("")
+):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("""
+        INSERT OR REPLACE INTO cases 
+        (case_id, ack_no, fir_no, victim_name, victim_phone, suspect_phone, disputed_amount, priority, data_hash, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNDER INVESTIGATION')
+    """, (case_id, ack_no, fir_no, victim_name, victim_phone, suspect_phone, disputed_amount, priority, data_hash))
+    conn.commit()
+    conn.close()
+    return {"status": "Case Saved Successfully", "case_id": case_id}
+
+# 3. Save Diary Entry Endpoint
+@app.post("/save_diary")
+def save_diary(case_id: str = Form(...), entry: str = Form(...)):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO audit_logs (case_id, log_text) VALUES (?, ?)", (case_id, entry))
+    conn.commit()
+    conn.close()
+    return {"status": "Diary entry recorded"}
 
 @app.get("/get_case/{case_id:path}")
 def get_case(case_id: str):
