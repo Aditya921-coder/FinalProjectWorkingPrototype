@@ -186,6 +186,11 @@ if page == "1. Case Creation & OCR":
                 ack_no = st.text_input("Acknowledgment No.", value=data.get("ack_no", ""))
                 fir_no = st.text_input("FIR No.", value=data.get("fir_no", ""))
                 victim_name = st.text_input("Victim Name", value=data.get("victim_name", ""))
+                victim_name = st.text_input(
+                    "Victim Name", 
+                    value=data.get("victim_name", ""), 
+                    key=f"victim_name_{data.get('data_hash', 'default')}"
+                )
                 victim_phone = st.text_input("Victim Phone", value=data.get("victim_phone", ""))
             
             with c2:
