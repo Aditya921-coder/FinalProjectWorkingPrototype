@@ -95,7 +95,7 @@ st.sidebar.markdown("**SQLite DB:** Active")
 st.sidebar.markdown("**AI Processing:** Ready")
 
 # Forensic Audit Trail View in Sidebar
-with st.sidebar.expander("📋 View Forensic Audit Trail"):
+with st.sidebar.expander("View Forensic Audit Trail"):
     try:
         conn = get_db_connection()
         logs_df = pd.read_sql_query("""
@@ -336,7 +336,7 @@ elif page == "3. Case Archive & Search":
     st.header("Phase 3: Database Search & Filtering Hub")
     st.caption("Search across saved case files, victims, or acknowledgment numbers.")
 
-    search_query = st.text_input("🔍 Filter by Case ID, Victim Name, FIR, or ACK Number:", "")
+    search_query = st.text_input("Filter by Case ID, Victim Name, FIR, or ACK Number:", "")
     
     try:
         conn = get_db_connection()
