@@ -137,7 +137,7 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     }
 
 @app.get("/search_cases")
-def search_cases(query: str = Query("", description="Search query")):
+def search_cases(query: str = ""):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     search_pattern = f"%{query}%" if query else "%"
@@ -198,7 +198,7 @@ def save_case(
     return {"status": "Case Saved Successfully", "case_id": case_id}
 
 @app.post("/save_diary")
-def save_diary(case_id: str = Form(...), entry: str = Form(...)):
+async def save_diary(case_id: str = Form(...), entry: str = Form(...)):
     log_audit_action(case_id, f"[DIARY ENTRY]: {entry}")
     return {"status": "Diary entry recorded"}
 
