@@ -10,4 +10,3 @@ pandas
 networkx
 matplotlib
 requests
-SpeechRecognition
