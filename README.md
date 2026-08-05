@@ -1,3 +1,4 @@
+IN CASE OF LOCAL HOSTING AND RUNNING, FOLLOW THE BELOW STEPS --
 Install the required libraries from the requirements.txt file using the command, "python -m pip install -r requirements.txt"
 
 Install tesseract from this link in C drive under the Program Files folder (this is important for the OCR functionality):
