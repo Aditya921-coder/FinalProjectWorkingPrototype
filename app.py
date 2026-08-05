@@ -185,7 +185,6 @@ if page == "1. Case Creation & OCR":
                 case_id = st.text_input("Case ID", value=data.get("case_id", "CC/2026/0701/000123"))
                 ack_no = st.text_input("Acknowledgment No.", value=data.get("ack_no", ""))
                 fir_no = st.text_input("FIR No.", value=data.get("fir_no", ""))
-                victim_name = st.text_input("Victim Name", value=data.get("victim_name", ""))
                 victim_name = st.text_input(
                     "Victim Name", 
                     value=data.get("victim_name", ""), 
