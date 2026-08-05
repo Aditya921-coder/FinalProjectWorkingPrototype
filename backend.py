@@ -114,7 +114,6 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     if name_match:
         victim_name = name_match.group(1).strip()
     
-    # If regex fails, grab the first clean capitalized word line from OCR text instead of hardcoding "Harsh Singh"
     if not victim_name:
         words = [line.strip() for line in extracted_text.splitlines() if line.strip()]
         victim_name = words[0] if words else "Unknown Victim"
