@@ -1,6 +1,6 @@
 streamlit
 fastapi
-uvicorn
+uvicorn==0.30.6
 python-multipart
 pytesseract
 pillow
@@ -10,3 +10,4 @@ pandas
 networkx
 matplotlib
 requests
+starlette==0.38.2
