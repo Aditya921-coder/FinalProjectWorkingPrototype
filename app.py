@@ -291,16 +291,16 @@ elif page == "2. Mind Map & Investigation Hub":
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
-                                    # Explicitly pass data as dict for form-encoded payload
-                                    payload = {"case_id": str(case_id_input), "entry": str(diary_text)}
-                                    res = requests.post(f"{API_URL}/save_diary", data=payload)
-                                    if res.status_code == 200:
-                                        st.success("Case diary entry successfully logged to backend database!")
-                                        st.rerun()
-                                    else:
-                                        st.error(f"Failed to log entry: Status code {res.status_code}")
+                                    conn = get_db_connection()
+                                    c = conn.cursor()
+                                    c.execute("INSERT INTO audit_logs (case_id, action) VALUES (?, ?)", 
+                                              (case_id_input, f"[DIARY ENTRY]: {diary_text}"))
+                                    conn.commit()
+                                    conn.close()
+                                    st.success("Case diary entry successfully logged to database!")
+                                    st.rerun()
                                 except Exception as e:
-                                    st.error(f"Could not reach backend: {e}")
+                                    st.error(f"Database error: {e}")
                             else:
                                 st.warning("Please enter some text before saving.")
             else:
@@ -320,20 +320,31 @@ elif page == "3. Case Archive & Search":
     search_query = st.text_input("🔍 Filter by Case ID, Victim Name, FIR, or ACK Number:", "")
     
     try:
-        # Direct URL string formatting avoids 404 query encoding errors
-        res = requests.get(f"{API_URL}/search_cases?query={search_query.strip()}")
-        if res.status_code == 200:
-            cases_data = res.json()
-            if cases_data:
-                df = pd.DataFrame(cases_data)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            else:
-                st.info("No matching records found in the database.")
-        else:
-            st.error(f"Could not query backend database (Status code: {res.status_code}).")
-    except Exception as e:
-        st.error(f"Error connecting to server: {e}")
+        conn = get_db_connection()
+        search_pattern = f"%{search_query.strip()}%" if search_query else "%"
+        
+        df = pd.read_sql_query("""
+            SELECT case_id AS [Case ID], 
+                   victim_name AS [Victim Name], 
+                   disputed_amount AS [Disputed Amount], 
+                   priority AS [Priority], 
+                   status AS [Status], 
+                   created_at AS [Created At], 
+                   data_hash AS [Hash]
+            FROM cases 
+            WHERE case_id LIKE ? OR victim_name LIKE ? OR ack_no LIKE ? OR fir_no LIKE ?
+            ORDER BY created_at DESC
+        """, conn, params=(search_pattern, search_pattern, search_pattern, search_pattern))
+        
+        conn.close()
 
+        if not df.empty:
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No matching records found in the database.")
+            
+    except Exception as e:
+        st.error(f"Error querying local database: {e}")
 # -------------------------------------------------------------
 # PHASE 4: SUMMARIZATION & PDF REPORT
 # -------------------------------------------------------------
