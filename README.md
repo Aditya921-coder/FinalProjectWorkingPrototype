@@ -6,3 +6,7 @@ https://github.com/tesseract-ocr/tesseract/releases/download/5.5.3/tesseract-ocr
 
 FOR MORE INFORMATION REGARDING RUNNING THE FILES, CHECK THE COMMENTS ON TOP OF backend.py AND app.py files
 
+FOR TESTING, YOU CAN USE THE 'TestingData.png' file provided in the repository
+
+Disclaimer: The OCR can be inaccurate, due to limited time and lack of manpower due to teammates ghosting and being non-responsive... it was all we could manage
+
