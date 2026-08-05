@@ -226,10 +226,10 @@ elif page == "2. Mind Map & Investigation Hub":
             if resp.status_code == 200:
                 res = resp.json()
                 if "error" in res:
-                    st.session_state["loaded_case"] = False  # Reset state on error
+                    st.session_state["loaded_case"] = False
                     st.error("Case Not Found! Save the case in Phase 1 first.")
                 else:
-                    st.session_state["loaded_case"] = True  # Only lock state when successful
+                    st.session_state["loaded_case"] = True
                     st.markdown(f"### Case Overview: `{res['case_id']}` | Status: <span class='status-badge'>UNDER INVESTIGATION</span>", unsafe_allow_html=True)
                     
                     tab1, tab2, tab3 = st.tabs(["Fund Flow Graph", "Action Request Dispatcher", "Case Diaries"])
@@ -294,7 +294,7 @@ elif page == "2. Mind Map & Investigation Hub":
                                     res = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
                                     if res.status_code == 200:
                                         st.success("Case diary entry successfully logged to backend database!")
-                                        st.rerun()  # Direct rerun keeps UI smooth
+                                        st.rerun()
                                     else:
                                         st.error(f"Failed to log entry: Status code {res.status_code}")
                                 except Exception as e:
@@ -309,9 +309,9 @@ elif page == "2. Mind Map & Investigation Hub":
             st.error(f"Backend server unreachable: {e}")
 
 # -------------------------------------------------------------
-# PHASE 3: CASE ARCHIVE & SEARCH
+# PHASE 3: CASE ARCHIVE & SEARCH (FIXED Routing from 'if' to 'elif')
 # -------------------------------------------------------------
-if page == "3. Case Archive & Search":
+elif page == "3. Case Archive & Search":
     st.header("Phase 3: Database Search & Filtering Hub")
     st.caption("Search across saved case files, victims, or acknowledgment numbers.")
 
@@ -388,4 +388,3 @@ elif page == "4. Summarization & PDF Reporting":
                     )
         except Exception as e:
             st.error(f"Error producing report: {e}")
-         
