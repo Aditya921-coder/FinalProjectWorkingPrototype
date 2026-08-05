@@ -65,7 +65,6 @@ def init_db():
                 case_id TEXT, sender TEXT, receiver TEXT,
                 amount REAL, layer TEXT
             )''')
-    # Fixed audit_logs table schema to include action/log_text safely
     c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 case_id TEXT, action TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -181,7 +180,6 @@ def save_case(
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNDER INVESTIGATION')
     """, (case_id, ack_no, fir_no, victim_name, victim_phone, suspect_phone, amt, priority, data_hash))
     
-    # Add dummy transactions if none exist for this case so Phase 2 Mind Map works immediately
     c.execute("SELECT COUNT(*) FROM transactions WHERE case_id=?", (case_id,))
     if c.fetchone()[0] == 0:
         c.executemany("""
