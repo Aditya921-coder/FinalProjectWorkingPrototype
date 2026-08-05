@@ -312,9 +312,21 @@ elif page == "2. Mind Map & Investigation Hub":
                             st.success("Request generated and logged to audit trail!")
 
                 with tab3:
-                    st.write("#### Case Diary Entries (Voice / Text)")
-                    st.text_area("New Diary Entry (Hindi / English)", "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage.")
-                    st.button("Save Diary Entry")
+                        st.write("#### Case Diary Entries (Voice / Text)")
+                        diary_text = st.text_area("New Diary Entry (Hindi / English)", "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage.")
+                        
+                        if st.button("Save Diary Entry"):
+                            if diary_text.strip():
+                                try:
+                                    res = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
+                                    if res.status_code == 200:
+                                        st.success("Case diary entry successfully logged to backend database!")
+                                    else:
+                                        st.error(f"Failed to log entry: Status code {res.status_code}")
+                                except Exception as e:
+                                    st.error(f"Could not reach backend: {e}")
+                            else:
+                                st.warning("Please enter some text before saving.")
 
         except Exception as e:
             st.error(f"Backend offline or execution error: {e}")
