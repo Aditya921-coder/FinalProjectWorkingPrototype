@@ -210,9 +210,6 @@ if page == "1. Case Creation & OCR":
 # -------------------------------------------------------------
 # PHASE 2: IO MIND MAP & LOGGING
 # -------------------------------------------------------------
-# -------------------------------------------------------------
-# PHASE 2: IO MIND MAP & LOGGING
-# -------------------------------------------------------------
 elif page == "2. Mind Map & Investigation Hub":
     st.header("Phase 2: Investigator Control Room & Money Trail Mind Map")
     
@@ -224,14 +221,15 @@ elif page == "2. Mind Map & Investigation Hub":
         load_btn = st.button("Load Investigation Workspace", use_container_width=True)
 
     if load_btn or st.session_state.get("loaded_case"):
-        st.session_state["loaded_case"] = True
         try:
             resp = requests.get(f"{API_URL}/get_case/{case_id_input}")
             if resp.status_code == 200:
                 res = resp.json()
                 if "error" in res:
+                    st.session_state["loaded_case"] = False  # Reset state on error
                     st.error("Case Not Found! Save the case in Phase 1 first.")
                 else:
+                    st.session_state["loaded_case"] = True  # Only lock state when successful
                     st.markdown(f"### Case Overview: `{res['case_id']}` | Status: <span class='status-badge'>UNDER INVESTIGATION</span>", unsafe_allow_html=True)
                     
                     tab1, tab2, tab3 = st.tabs(["Fund Flow Graph", "Action Request Dispatcher", "Case Diaries"])
@@ -293,18 +291,21 @@ elif page == "2. Mind Map & Investigation Hub":
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
-                                    res_d = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
-                                    if res_d.status_code == 200:
+                                    res = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
+                                    if res.status_code == 200:
                                         st.success("Case diary entry successfully logged to backend database!")
+                                        st.rerun()  # Direct rerun keeps UI smooth
                                     else:
-                                        st.error(f"Failed to log entry: Status code {res_d.status_code}")
+                                        st.error(f"Failed to log entry: Status code {res.status_code}")
                                 except Exception as e:
                                     st.error(f"Could not reach backend: {e}")
                             else:
                                 st.warning("Please enter some text before saving.")
             else:
+                st.session_state["loaded_case"] = False
                 st.error(f"Backend error ({resp.status_code}): Case file not initialized yet. Go to Phase 1 and click 'Save Case & Dispatch to IO Workflow' first.")
         except Exception as e:
+            st.session_state["loaded_case"] = False
             st.error(f"Backend server unreachable: {e}")
 
 # -------------------------------------------------------------
