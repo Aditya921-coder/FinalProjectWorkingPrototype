@@ -1,18 +1,36 @@
 import io
+import os
+import sys
+import socket
+import subprocess
+import time
 import requests
 import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import subprocess
-import time
 
-# Auto-start FastAPI backend when deployed on Streamlit Cloud
+# Check if local port is bound
+def is_port_open(port=8000):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+# Reliable Auto-start FastAPI backend on Streamlit Cloud
 @st.cache_resource
 def start_backend():
-    subprocess.Popen(["uvicorn", "backend:app", "--host", "127.0.0.1", "--port", "8000"])
-    time.sleep(2)
+    if not is_port_open(8000):
+        # Uses sys.executable to run uvicorn within the exact Streamlit Cloud environment
+        subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "backend:app", "--host", "127.0.0.1", "--port", "8000"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        # Polling loop to wait until FastAPI server is ready
+        for _ in range(10):
+            if is_port_open(8000):
+                break
+            time.sleep(0.5)
 
 start_backend()
 
@@ -379,7 +397,6 @@ elif page == "4. Summarization & PDF Reporting":
                         mime="application/pdf",
                         use_container_width=True
                     )
-            else:
-                st.error("Case not found in database! Save the case in Phase 1 first.")
         except Exception as e:
-            st.error(f"Error generating report: {e}")
+            st.error(f"Error producing report: {e}")
+         
