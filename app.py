@@ -147,8 +147,6 @@ if page == "1. Case Creation & OCR":
                     try:
                         res = requests.post(f"{API_URL}/upload_ncp_pdf", files=files).json()
                         if res.get("status") == "success":
-                            # CLEAR OLD SESSION DATA FIRST TO PREVENT STALE VALUES IN FORM
-                            st.session_state["ocr_data"] = {}
                             st.session_state["ocr_data"] = res["extracted"]
                             st.success("OCR Processing Complete!")
                             st.rerun()
@@ -180,10 +178,10 @@ if page == "1. Case Creation & OCR":
         with st.form("case_form"):
             c1, c2 = st.columns(2)
             with c1:
-                case_id = st.text_input("Case ID", value=data.get("case_id", ""))
+                case_id = st.text_input("Case ID", value=data.get("case_id", "CC/2026/0701/......"))
                 ack_no = st.text_input("Acknowledgment No.", value=data.get("ack_no", ""))
                 fir_no = st.text_input("FIR No.", value=data.get("fir_no", ""))
-                victim_name = st.text_input("Victim Name", value=data.get("victim_name", ""))
+                victim_name = st.text_input("Victim Name", value=data.get("victim_name", "Unknown Victim"))
                 victim_phone = st.text_input("Victim Phone", value=data.get("victim_phone", ""))
             
             with c2:
@@ -233,7 +231,7 @@ elif page == "2. Mind Map & Investigation Hub":
     
     col_input, col_status = st.columns([3, 1])
     with col_input:
-        case_id_input = st.text_input("Active Case ID:", "")
+        case_id_input = st.text_input("Active Case ID:", "CC/2026/0701/......")
     with col_status:
         st.markdown("<br>", unsafe_allow_html=True)
         load_btn = st.button("Load Investigation Workspace", use_container_width=True)
@@ -298,7 +296,7 @@ elif page == "2. Mind Map & Investigation Hub":
                             st.selectbox("Request Type", ["CDR (Call Detail Records)", "IPDR (IP Detail Records)", "CAF / Subscriber KYC", "Bank Freeze Order"])
                             st.text_input("Target Authority / Bank", "Airtel Telecommunications / ICICI Bank")
                         with col2:
-                            st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 318 BNS and digital identify theft concerns and prosecution under Sec 66C and 66D of the IT Act, 2000.")
+                            st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 318 BNS and digital identity theft concerns and prosecution under Sec 66C and 66D of the IT Act, 2000.")
                             if st.button("Issue Official Request"):
                                 st.success("Request generated and logged to audit trail!")
 
@@ -376,7 +374,7 @@ elif page == "3. Case Archive & Search":
 elif page == "4. Summarization & PDF Reporting":
     st.header("Phase 4: Automated Case Timeline & Court PDF Export")
     
-    case_id_input = st.text_input("Target Case ID:", "CC/2026/0701/000123")
+    case_id_input = st.text_input("Target Case ID:", "CC/2026/0701/......")
     
     if st.button("Generate Comprehensive Report", use_container_width=True):
         try:
