@@ -210,6 +210,9 @@ if page == "1. Case Creation & OCR":
 # -------------------------------------------------------------
 # PHASE 2: IO MIND MAP & LOGGING
 # -------------------------------------------------------------
+# -------------------------------------------------------------
+# PHASE 2: IO MIND MAP & LOGGING
+# -------------------------------------------------------------
 elif page == "2. Mind Map & Investigation Hub":
     st.header("Phase 2: Investigator Control Room & Money Trail Mind Map")
     
@@ -223,113 +226,86 @@ elif page == "2. Mind Map & Investigation Hub":
     if load_btn or st.session_state.get("loaded_case"):
         st.session_state["loaded_case"] = True
         try:
-            res = requests.get(f"{API_URL}/get_case/{case_id_input}").json()
-            if "error" in res:
-                st.error("Case Not Found! Create it in Phase 1 first or click 'Quick-Load' in Phase 1.")
-            else:
-                st.markdown(f"### Case Overview: `{res['case_id']}` | Status: <span class='status-badge'>UNDER INVESTIGATION</span>", unsafe_allow_html=True)
-                
-                tab1, tab2, tab3 = st.tabs(["Fund Flow Graph", "Action Request Dispatcher", "Case Diaries"])
-                
-                with tab1:
-                    st.write("#### AI Generated Color-Coded Money Trail Mind Map")
-                    G = nx.DiGraph()
-                    color_map = []
+            resp = requests.get(f"{API_URL}/get_case/{case_id_input}")
+            if resp.status_code == 200:
+                res = resp.json()
+                if "error" in res:
+                    st.error("Case Not Found! Save the case in Phase 1 first.")
+                else:
+                    st.markdown(f"### Case Overview: `{res['case_id']}` | Status: <span class='status-badge'>UNDER INVESTIGATION</span>", unsafe_allow_html=True)
                     
-                    for tx in res["transactions"]:
-                        G.add_edge(tx["sender"], tx["receiver"], label=f"Rs. {tx['amount']:,.0f}")
+                    tab1, tab2, tab3 = st.tabs(["Fund Flow Graph", "Action Request Dispatcher", "Case Diaries"])
                     
-                    for node in G.nodes():
-                        if "Victim" in node:
-                            color_map.append("#3b82f6")  # Blue
-                        elif "Layer 1" in node:
-                            color_map.append("#ef4444")  # Red
-                        elif "Layer 2" in node:
-                            color_map.append("#f59e0b")  # Yellow
+                    with tab1:
+                        st.write("#### AI Generated Color-Coded Money Trail Mind Map")
+                        G = nx.DiGraph()
+                        color_map = []
+                        
+                        for tx in res.get("transactions", []):
+                            G.add_edge(tx["sender"], tx["receiver"], label=f"Rs. {tx['amount']:,.0f}")
+                        
+                        if len(G.nodes()) == 0:
+                            st.info("No transaction data available to plot graph.")
                         else:
-                            color_map.append("#10b981")  # Green
+                            for node in G.nodes():
+                                if "Victim" in node:
+                                    color_map.append("#3b82f6")  # Blue
+                                elif "Layer 1" in node:
+                                    color_map.append("#ef4444")  # Red
+                                elif "Layer 2" in node:
+                                    color_map.append("#f59e0b")  # Yellow
+                                else:
+                                    color_map.append("#10b981")  # Green
+                                    
+                            pos = nx.spring_layout(G, k=0.8, seed=42)
+                            fig, ax = plt.subplots(figsize=(11, 4.5))
+                            fig.patch.set_facecolor('#0e1117')
+                            ax.set_facecolor('#0e1117')
                             
-                    pos = nx.spring_layout(G, k=0.8, seed=42)
-                    
-                    fig, ax = plt.subplots(figsize=(11, 4.5))
-                    fig.patch.set_facecolor('#0e1117')
-                    ax.set_facecolor('#0e1117')
-                    
-                    nx.draw_networkx_nodes(
-                        G, pos, 
-                        node_shape='s', 
-                        node_size=5500, 
-                        node_color=color_map, 
-                        edgecolors='#ffffff', 
-                        linewidths=1.5, 
-                        ax=ax
-                    )
-                    
-                    nx.draw_networkx_edges(
-                        G, pos, 
-                        edge_color='#94a3b8', 
-                        arrowsize=20, 
-                        arrowstyle='->', 
-                        width=2, 
-                        connectionstyle="arc3,rad=0.1", 
-                        ax=ax
-                    )
-                    
-                    formatted_labels = {node: node.replace(" ", "\n", 2) for node in G.nodes()}
-                    nx.draw_networkx_labels(
-                        G, pos, 
-                        labels=formatted_labels, 
-                        font_size=8, 
-                        font_color='#ffffff', 
-                        font_weight='bold', 
-                        ax=ax
-                    )
-                    
-                    edge_labels = nx.get_edge_attributes(G, 'label')
-                    nx.draw_networkx_edge_labels(
-                        G, pos, 
-                        edge_labels=edge_labels, 
-                        font_color='#fbbf24', 
-                        font_size=9, 
-                        font_weight='bold', 
-                        bbox=dict(boxstyle='round,pad=0.3', facecolor='#0e1117', edgecolor='#fbbf24', alpha=0.9), 
-                        ax=ax
-                    )
-                    
-                    plt.margins(0.25)
-                    plt.axis('off')
-                    st.pyplot(fig)
+                            nx.draw_networkx_nodes(G, pos, node_shape='s', node_size=5500, node_color=color_map, edgecolors='#ffffff', linewidths=1.5, ax=ax)
+                            nx.draw_networkx_edges(G, pos, edge_color='#94a3b8', arrowsize=20, arrowstyle='->', width=2, connectionstyle="arc3,rad=0.1", ax=ax)
+                            
+                            formatted_labels = {node: node.replace(" ", "\n", 2) for node in G.nodes()}
+                            nx.draw_networkx_labels(G, pos, labels=formatted_labels, font_size=8, font_color='#ffffff', font_weight='bold', ax=ax)
+                            
+                            edge_labels = nx.get_edge_attributes(G, 'label')
+                            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='#fbbf24', font_size=9, font_weight='bold', bbox=dict(boxstyle='round,pad=0.3', facecolor='#0e1117', edgecolor='#fbbf24', alpha=0.9), ax=ax)
+                            
+                            plt.margins(0.25)
+                            plt.axis('off')
+                            st.pyplot(fig)
 
-                with tab2:
-                    st.write("#### Dispatch Formal Nodal Requests")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.selectbox("Request Type", ["CDR (Call Detail Records)", "IPDR (IP Detail Records)", "CAF / Subscriber KYC", "Bank Freeze Order"])
-                        st.text_input("Target Authority / Bank", "Airtel Telecommunications / ICICI Bank")
-                    with col2:
-                        st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 91 CrPC.")
-                        if st.button("Issue Official Request"):
-                            st.success("Request generated and logged to audit trail!")
+                    with tab2:
+                        st.write("#### Dispatch Formal Nodal Requests")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.selectbox("Request Type", ["CDR (Call Detail Records)", "IPDR (IP Detail Records)", "CAF / Subscriber KYC", "Bank Freeze Order"])
+                            st.text_input("Target Authority / Bank", "Airtel Telecommunications / ICICI Bank")
+                        with col2:
+                            st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 91 CrPC.")
+                            if st.button("Issue Official Request"):
+                                st.success("Request generated and logged to audit trail!")
 
-                with tab3:
+                    with tab3:
                         st.write("#### Case Diary Entries (Voice / Text)")
                         diary_text = st.text_area("New Diary Entry (Hindi / English)", "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage.")
                         
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
-                                    res = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
-                                    if res.status_code == 200:
+                                    res_d = requests.post(f"{API_URL}/save_diary", data={"case_id": case_id_input, "entry": diary_text})
+                                    if res_d.status_code == 200:
                                         st.success("Case diary entry successfully logged to backend database!")
                                     else:
-                                        st.error(f"Failed to log entry: Status code {res.status_code}")
+                                        st.error(f"Failed to log entry: Status code {res_d.status_code}")
                                 except Exception as e:
                                     st.error(f"Could not reach backend: {e}")
                             else:
                                 st.warning("Please enter some text before saving.")
-
+            else:
+                st.error(f"Backend error ({resp.status_code}): Case file not initialized yet. Go to Phase 1 and click 'Save Case & Dispatch to IO Workflow' first.")
         except Exception as e:
-            st.error(f"Backend offline or execution error: {e}")
+            st.error(f"Backend server unreachable: {e}")
 
 # -------------------------------------------------------------
 # PHASE 3: CASE ARCHIVE & SEARCH
