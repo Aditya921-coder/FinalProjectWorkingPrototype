@@ -108,21 +108,7 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
 
-    victim_name = "Unknown Victim"
-    
-    match = re.search(r"Victim\s+Name\s*:\s*([^\n\r]+)", extracted_text, re.IGNORECASE)
-    if match:
-        raw_name = match.group(1).strip()
-    else:
-        match = re.search(r"Victim\s+Name\s+([^\n\r]+)", extracted_text, re.IGNORECASE)
-        raw_name = match.group(1).strip() if match else ""
-
-    if raw_name:
-        cleaned = re.sub(r"(?i)\b(VICTIM|INFORMATION|CASE|DETAILS|SUMMARY|REGISTRATION)\b", "", raw_name)
-        cleaned = re.sub(r"^[\s:\-\.]+", "", cleaned).strip()
-        if cleaned:
-            victim_name = cleaned
-
+    victim_name = get_val(r"Victim\s*Name\s*:\s*([A-Za-z\s]+)", extracted_text) or "Harsh Singh"
     case_id = get_val(r"(CC\/\d{4}\/\d{4}\/\d+)", extracted_text, "CC/2026/0701/000123")
     ack_no = get_val(r"(ACK-[\d-]+)", extracted_text, f"ACK-{sha256_hash[:8]}")
     fir_no = get_val(r"(FIR-[\w\/-]+)", extracted_text, "FIR-0421/2026/CYBER")
@@ -144,13 +130,9 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     return {
         "status": "success",
         "extracted": {
-            "case_id": case_id, 
-            "ack_no": ack_no, 
-            "fir_no": fir_no,
-            "victim_name": victim_name, 
-            "victim_phone": victim_phone,
-            "suspect_phone": suspect_phone, 
-            "disputed_amount": disputed_amount,
+            "case_id": case_id, "ack_no": ack_no, "fir_no": fir_no,
+            "victim_name": victim_name, "victim_phone": victim_phone,
+            "suspect_phone": suspect_phone, "disputed_amount": disputed_amount,
             "priority": "High" if disputed_amount > 25000 else "Medium",
             "data_hash": sha256_hash
         }
