@@ -188,6 +188,26 @@ def save_case(
 
     return {"status": "Case Created Successfully"}
 
+@app.get("/search_cases")
+def search_cases(query: str = ""):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    search_pattern = f"%{query}%"
+    c.execute("""
+        SELECT case_id, victim_name, disputed_amount, priority, status, created_at, data_hash 
+        FROM cases 
+        WHERE case_id LIKE ? OR victim_name LIKE ? OR ack_no LIKE ? OR fir_no LIKE ?
+        ORDER BY created_at DESC
+    """, (search_pattern, search_pattern, search_pattern, search_pattern))
+    rows = c.fetchall()
+    conn.close()
+    return [
+        {
+            "case_id": r[0], "victim_name": r[1], "disputed_amount": r[2], 
+            "priority": r[3], "status": r[4], "created_at": r[5], "data_hash": r[6]
+        } for r in rows
+    ]
+
 @app.get("/get_case/{case_id:path}")
 def get_case(case_id: str):
     conn = sqlite3.connect('database.db')
@@ -218,26 +238,6 @@ def get_case(case_id: str):
         "created_at": case[9], "data_hash": case[10], "ai_summary": summary_text,
         "transactions": [{"sender": t[0], "receiver": t[1], "amount": t[2], "layer": t[3]} for t in txs]
     }
-
-@app.get("/search_cases")
-def search_cases(query: str = ""):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    search_pattern = f"%{query}%"
-    c.execute("""
-        SELECT case_id, victim_name, disputed_amount, priority, status, created_at, data_hash 
-        FROM cases 
-        WHERE case_id LIKE ? OR victim_name LIKE ? OR ack_no LIKE ? OR fir_no LIKE ?
-        ORDER BY created_at DESC
-    """, (search_pattern, search_pattern, search_pattern, search_pattern))
-    rows = c.fetchall()
-    conn.close()
-    return [
-        {
-            "case_id": r[0], "victim_name": r[1], "disputed_amount": r[2], 
-            "priority": r[3], "status": r[4], "created_at": r[5], "data_hash": r[6]
-        } for r in rows
-    ]
 
 @app.get("/audit_logs")
 def get_audit_logs():
