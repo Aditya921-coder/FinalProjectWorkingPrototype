@@ -100,26 +100,28 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     if pytesseract:
         try:
             image = Image.open(io.BytesIO(content))
-            # --psm 6 forces Tesseract to preserve line breaks correctly
-            extracted_text = pytesseract.image_to_string(image, config='--psm 6')
+            extracted_text = pytesseract.image_to_string(image)
         except Exception as e:
             print(f"Local Tesseract OCR Error: {e}")
 
-    # 1. PARSE VICTIM NAME LINE-BY-LINE (Zero Regex Glitches)
-    victim_name = "Unknown Victim"
-    for line in extracted_text.splitlines():
-        # Clean double spaces
-        clean_line = " ".join(line.split())
-        if "victim name" in clean_line.lower():
-            if ":" in clean_line:
-                # Splitting on colon guarantees we ONLY get what is AFTER the colon
-                victim_name = clean_line.split(":", 1)[1].strip()
-                break
-
-    # 2. PARSE OTHER FIELDS SAFELY
     def get_val(pattern, text, default=""):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
+
+    victim_name = "Unknown Victim"
+    
+    match = re.search(r"Victim\s+Name\s*:\s*([^\n\r]+)", extracted_text, re.IGNORECASE)
+    if match:
+        raw_name = match.group(1).strip()
+    else:
+        match = re.search(r"Victim\s+Name\s+([^\n\r]+)", extracted_text, re.IGNORECASE)
+        raw_name = match.group(1).strip() if match else ""
+
+    if raw_name:
+        cleaned = re.sub(r"(?i)\b(VICTIM|INFORMATION|CASE|DETAILS|SUMMARY|REGISTRATION)\b", "", raw_name)
+        cleaned = re.sub(r"^[\s:\-\.]+", "", cleaned).strip()
+        if cleaned:
+            victim_name = cleaned
 
     case_id = get_val(r"(CC\/\d{4}\/\d{4}\/\d+)", extracted_text, "CC/2026/0701/000123")
     ack_no = get_val(r"(ACK-[\d-]+)", extracted_text, f"ACK-{sha256_hash[:8]}")
