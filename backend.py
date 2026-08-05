@@ -108,10 +108,10 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
 
-    match = re.search(r"Victim\s+Name\s*:\s*(.+)", extracted_text, re.IGNORECASE)
+    name_match = re.search(r"Victim\s+Name\s*:\s*([^\n\r]+)", extracted_text, re.IGNORECASE)
 
-    if match:
-        victim_name = match.group(1).strip()
+    if name_match:
+        victim_name = name_match.group(1).strip()
     else:
         victim_name = "Unknown Victim"
     case_id = get_val(r"(CC\/\d{4}\/\d{4}\/\d+)", extracted_text, "CC/2026/0701/000123")
