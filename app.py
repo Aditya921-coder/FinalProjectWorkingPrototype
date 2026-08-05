@@ -301,55 +301,25 @@ elif page == "2. Mind Map & Investigation Hub":
                                 st.success("Request generated and logged to audit trail!")
 
                     with tab3:
-                        st.write("#### Multimodal Case Diary Entry (Voice & Text)")
+                        st.write("#### Multimodal Case Diary Entries (Voice or Text)")
                         
-                        # Initialize diary content state if not present
-                        if "diary_input" not in st.session_state:
-                            st.session_state["diary_input"] = "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage."
-
-                        d_col1, d_col2 = st.columns([1, 1])
+                        audio_val = st.audio_input("🎙️ Record Voice Diary Note")
                         
-                        with d_col1:
-                            st.markdown("##### 🎙️ Dictate Note (Voice)")
-                            # Native Streamlit audio recorder component
-                            recorded_audio = st.audio_input("Record Voice Statement", key="diary_mic")
-                            
-                            if recorded_audio is not None:
-                                # Track processed audio via session_state to prevent re-transcribing on re-runs
-                                audio_bytes = recorded_audio.getvalue()
-                                audio_hash = hashlib.md5(audio_bytes).hexdigest()
-                                
-                                if st.session_state.get("last_processed_audio") != audio_hash:
-                                    with st.spinner("Transcribing speech..."):
-                                        try:
-                                            files = {"file": ("recording.wav", audio_bytes, "audio/wav")}
-                                            res = requests.post(f"{API_URL}/transcribe_audio", files=files).json()
-                                            
-                                            if res.get("status") == "success":
-                                                transcription = res.get("text", "")
-                                                if transcription:
-                                                    # Append transcribed voice note into the input buffer
-                                                    st.session_state["diary_input"] += f"\n[Voice Note]: {transcription}"
-                                                    st.session_state["last_processed_audio"] = audio_hash
-                                                    st.success("Transcribed and added to entry text!")
-                                                    st.rerun()
-                                            else:
-                                                st.warning(res.get("message", "Could not transcribe audio."))
-                                        except Exception as e:
-                                            st.error(f"Failed to communicate with transcription API: {e}")
+                        default_text = "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage."
+                        
+                        if audio_val is not None:
+                            try:
+                                files = {"file": ("audio.wav", audio_val.getvalue(), "audio/wav")}
+                                r = requests.post(f"{API_URL}/transcribe_audio", files=files).json()
+                                if r.get("status") == "success":
+                                    default_text += f"\n[Voice Transcription]: {r.get('text')}"
+                            except Exception:
+                                pass
 
-                        with d_col2:
-                            st.markdown("##### 📝 Edit / Finalize Entry")
-                            updated_entry = st.text_area(
-                                "Case Diary Entry Text:", 
-                                value=st.session_state["diary_input"], 
-                                height=200
-                            )
-                            # Keep session state updated if user types manually
-                            st.session_state["diary_input"] = updated_entry
-
-                        if st.button("Save Diary Entry", type="primary", use_container_width=True):
-                            if st.session_state["diary_input"].strip():
+                        diary_text = st.text_area("Case Diary Text Entry", value=default_text, height=180)
+                        
+                        if st.button("Save Diary Entry"):
+                            if diary_text.strip():
                                 try:
                                     conn = get_db_connection()
                                     c = conn.cursor()
@@ -359,7 +329,7 @@ elif page == "2. Mind Map & Investigation Hub":
                                                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                             )''')
                                     c.execute("INSERT INTO audit_logs (case_id, action) VALUES (?, ?)", 
-                                              (case_id_input, f"[DIARY ENTRY]: {st.session_state['diary_input']}"))
+                                              (case_id_input, f"[DIARY ENTRY]: {diary_text}"))
                                     conn.commit()
                                     conn.close()
                                     st.success("Case diary entry successfully logged!")
@@ -367,7 +337,7 @@ elif page == "2. Mind Map & Investigation Hub":
                                 except Exception as e:
                                     st.error(f"Database error: {e}")
                             else:
-                                st.warning("Please enter or dictate some text before saving.")
+                                st.warning("Please enter some text before saving.")
             else:
                 st.session_state["loaded_case"] = False
                 st.error(f"Backend error ({resp.status_code}): Case file not initialized yet. Go to Phase 1 and click 'Save Case & Dispatch to IO Workflow' first.")
