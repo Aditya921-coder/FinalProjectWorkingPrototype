@@ -100,27 +100,27 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     if pytesseract:
         try:
             image = Image.open(io.BytesIO(content))
-            extracted_text = pytesseract.image_to_string(image)
+            # --psm 6 forces Tesseract to preserve line breaks correctly
+            extracted_text = pytesseract.image_to_string(image, config='--psm 6')
         except Exception as e:
             print(f"Local Tesseract OCR Error: {e}")
 
+    # 1. PARSE VICTIM NAME LINE-BY-LINE (Zero Regex Glitches)
+    victim_name = "Unknown Victim"
+    for line in extracted_text.splitlines():
+        # Clean double spaces
+        clean_line = " ".join(line.split())
+        if "victim name" in clean_line.lower():
+            if ":" in clean_line:
+                # Splitting on colon guarantees we ONLY get what is AFTER the colon
+                victim_name = clean_line.split(":", 1)[1].strip()
+                break
+
+    # 2. PARSE OTHER FIELDS SAFELY
     def get_val(pattern, text, default=""):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
 
-    # 1. EXTRACT VICTIM NAME (Safely isolating after "Victim Name" label)
-    victim_name = "Unknown Victim"
-    # Matches everything following "Victim Name" on the same line
-    name_match = re.search(r"Victim\s+Name\s*:?\s*([^\n\r]+)", extracted_text, re.IGNORECASE)
-    
-    if name_match:
-        candidate = name_match.group(1).strip()
-        # Clean out lingering OCR artifact words like "INFORMATION"
-        candidate = re.sub(r"(?i)\bINFORMATION\b", "", candidate).strip()
-        if candidate:
-            victim_name = candidate
-
-    # 2. EXTRACT OTHER FIELDS
     case_id = get_val(r"(CC\/\d{4}\/\d{4}\/\d+)", extracted_text, "CC/2026/0701/000123")
     ack_no = get_val(r"(ACK-[\d-]+)", extracted_text, f"ACK-{sha256_hash[:8]}")
     fir_no = get_val(r"(FIR-[\w\/-]+)", extracted_text, "FIR-0421/2026/CYBER")
@@ -142,9 +142,13 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
     return {
         "status": "success",
         "extracted": {
-            "case_id": case_id, "ack_no": ack_no, "fir_no": fir_no,
-            "victim_name": victim_name, "victim_phone": victim_phone,
-            "suspect_phone": suspect_phone, "disputed_amount": disputed_amount,
+            "case_id": case_id, 
+            "ack_no": ack_no, 
+            "fir_no": fir_no,
+            "victim_name": victim_name, 
+            "victim_phone": victim_phone,
+            "suspect_phone": suspect_phone, 
+            "disputed_amount": disputed_amount,
             "priority": "High" if disputed_amount > 25000 else "Medium",
             "data_hash": sha256_hash
         }
