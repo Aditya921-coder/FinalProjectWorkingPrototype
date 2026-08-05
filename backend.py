@@ -108,7 +108,7 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
 
-    name_match = re.search(r"Victim\s+Name\s*:\s*([^\n\r]+)", extracted_text, re.IGNORECASE)
+    name_match = re.search(r"Victim\s+Name\s*:?\s*([A-Za-z\s.\-']+)", extracted_text, re.IGNORECASE)
 
     if name_match:
         victim_name = name_match.group(1).strip()
