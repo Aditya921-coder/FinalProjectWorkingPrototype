@@ -42,7 +42,7 @@ start_backend()
 
 # Set Page Config
 st.set_page_config(
-    page_title="MHA Cyber Crime Investigation Suite", 
+    page_title="Cyber Crime Investigation Suite", 
     page_icon="🛡️", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -64,7 +64,7 @@ API_URL = "http://127.0.0.1:8000"
 class ForensicPDF(FPDF):
     def header(self):
         self.set_font("Arial", "B", 13)
-        self.cell(0, 8, "CONFIDENTIAL // MINISTRY OF HOME AFFAIRS CYBER CRIME REPORT", ln=True, align="C")
+        self.cell(0, 8, "CONFIDENTIAL // AUTOMATED FORENSIC DASHBOARD CYBER CRIME REPORT", ln=True, align="C")
         self.set_font("Arial", "I", 9)
         self.cell(0, 5, "Generated via Automated Forensics System", ln=True, align="C")
         self.line(10, 24, 200, 24)
@@ -76,9 +76,9 @@ class ForensicPDF(FPDF):
         self.cell(0, 10, f"Page {self.page_no()} - Chain of Custody & Data Integrity Guaranteed", align="C")
 
 # Sidebar Branding & Navigation
-st.sidebar.markdown("## 🛡️ **MHA Cyber Crime**")
-st.sidebar.title("MHA Cyber Crime Portal")
-st.sidebar.caption("Ministry of Home Affairs | Govt. of India")
+st.sidebar.markdown("## 🛡️ **Cyber Crime Dashboard Suite**")
+st.sidebar.title("Cyber Crime Portal")
+st.sidebar.caption("Unified Dashboard | ABC Corporation")
 st.sidebar.markdown("---")
 
 page = st.sidebar.radio("Navigation Module", [
@@ -92,10 +92,10 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("System Health")
 st.sidebar.markdown("**Backend API:** Online (`localhost:8000`)")
 st.sidebar.markdown("**SQLite DB:** Active")
-st.sidebar.markdown("**AI Processing:** Local Tesseract Ready")
+st.sidebar.markdown("**AI Processing:** Ready")
 
 # Forensic Audit Trail View in Sidebar
-with st.sidebar.expander("📋 View Forensic Audit Trail"):
+with st.sidebar.expander("View Forensic Audit Trail"):
     try:
         res = requests.get(f"{API_URL}/audit_logs")
         if res.status_code == 200 and res.json():
