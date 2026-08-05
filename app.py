@@ -1,3 +1,6 @@
+# LOCAL RUNNING INSTRUCTIONS (applicable only when not using the Streamlit link directly)
+# Run this command in another instance of Powershell terminal "streamlit run app.py"
+
 import io
 import os
 import sys
