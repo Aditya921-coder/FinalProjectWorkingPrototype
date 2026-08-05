@@ -95,14 +95,21 @@ st.sidebar.markdown("**SQLite DB:** Active")
 st.sidebar.markdown("**AI Processing:** Ready")
 
 # Forensic Audit Trail View in Sidebar
-with st.sidebar.expander("View Forensic Audit Trail"):
+with st.sidebar.expander("📋 View Forensic Audit Trail"):
     try:
-        res = requests.get(f"{API_URL}/audit_logs")
-        if res.status_code == 200 and res.json():
-            st.dataframe(pd.DataFrame(res.json()), use_container_width=True, hide_index=True)
+        conn = get_db_connection()
+        logs_df = pd.read_sql_query("""
+            SELECT case_id AS [Case ID], action AS [Action], timestamp AS [Timestamp]
+            FROM audit_logs 
+            ORDER BY id DESC LIMIT 20
+        """, conn)
+        conn.close()
+
+        if not logs_df.empty:
+            st.dataframe(logs_df, use_container_width=True, hide_index=True)
         else:
             st.info("No audit logs found.")
-    except Exception:
+    except Exception as e:
         st.caption("Audit logs unavailable.")
 
 # Global Header KPI Metrics
