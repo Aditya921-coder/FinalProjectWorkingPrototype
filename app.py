@@ -296,7 +296,7 @@ elif page == "2. Mind Map & Investigation Hub":
                             st.selectbox("Request Type", ["CDR (Call Detail Records)", "IPDR (IP Detail Records)", "CAF / Subscriber KYC", "Bank Freeze Order"])
                             st.text_input("Target Authority / Bank", "Airtel Telecommunications / ICICI Bank")
                         with col2:
-                            st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 91 CrPC.")
+                            st.text_area("Legal Justification / Remarks", "Urgent request in connection with fraudulent money trail under Sec 318 BNS and digital identify theft concerns and prosecution under Sec 66C and 66D of the IT Act, 2000.")
                             if st.button("Issue Official Request"):
                                 st.success("Request generated and logged to audit trail!")
 
