@@ -304,14 +304,14 @@ elif page == "2. Mind Map & Investigation Hub":
 # -------------------------------------------------------------
 # PHASE 3: CASE ARCHIVE & SEARCH
 # -------------------------------------------------------------
-elif page == "3. Case Archive & Search":
+if page == "3. Case Archive & Search":
     st.header("Phase 3: Database Search & Filtering Hub")
     st.caption("Search across saved case files, victims, or acknowledgment numbers.")
 
     search_query = st.text_input("🔍 Filter by Case ID, Victim Name, FIR, or ACK Number:", "")
     
     try:
-        res = requests.get(f"{API_URL}/search_cases", params={"query": search_query})
+        res = requests.get(f"{API_URL}/search_cases", params={"query": search_query if search_query else ""})
         if res.status_code == 200:
             cases_data = res.json()
             if cases_data:
@@ -320,7 +320,7 @@ elif page == "3. Case Archive & Search":
             else:
                 st.info("No matching records found in the database.")
         else:
-            st.error("Could not query backend database.")
+            st.error(f"Could not query backend database (Status code: {res.status_code}).")
     except Exception as e:
         st.error(f"Error connecting to server: {e}")
 
@@ -370,7 +370,7 @@ elif page == "4. Summarization & PDF Reporting":
                     pdf.set_font("Arial", size=10)
                     pdf.multi_cell(0, 6, summary_text)
                     
-                    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+                    pdf_bytes = bytes(pdf.output())
                     
                     st.download_button(
                         label="⬇ Download Official PDF Report",
