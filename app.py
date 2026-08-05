@@ -147,6 +147,8 @@ if page == "1. Case Creation & OCR":
                     try:
                         res = requests.post(f"{API_URL}/upload_ncp_pdf", files=files).json()
                         if res.get("status") == "success":
+                            # CLEAR OLD SESSION DATA FIRST TO PREVENT STALE VALUES IN FORM
+                            st.session_state["ocr_data"] = {}
                             st.session_state["ocr_data"] = res["extracted"]
                             st.success("OCR Processing Complete!")
                             st.rerun()
