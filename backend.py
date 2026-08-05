@@ -108,15 +108,12 @@ async def upload_ncp_pdf(file: UploadFile = File(...)):
         m = re.search(pattern, text, re.IGNORECASE)
         return m.group(1).strip() if m else default
 
-    # Broad regex matching for Victim/Complainant Name
-    victim_name = ""
-    name_match = re.search(r"(?:Victim|Complainant|Name)[\s:]+([A-Za-z\s]{3,30})", extracted_text, re.IGNORECASE)
-    if name_match:
-        victim_name = name_match.group(1).strip()
-    
-    if not victim_name:
-        words = [line.strip() for line in extracted_text.splitlines() if line.strip()]
-        victim_name = words[0] if words else "Unknown Victim"
+    match = re.search(r"Victim\s+Name\s*:\s*(.+)", extracted_text, re.IGNORECASE)
+
+    if match:
+        victim_name = match.group(1).strip()
+    else:
+        victim_name = "Unknown Victim"
     case_id = get_val(r"(CC\/\d{4}\/\d{4}\/\d+)", extracted_text, "CC/2026/0701/000123")
     ack_no = get_val(r"(ACK-[\d-]+)", extracted_text, f"ACK-{sha256_hash[:8]}")
     fir_no = get_val(r"(FIR-[\w\/-]+)", extracted_text, "FIR-0421/2026/CYBER")
