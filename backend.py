@@ -1,3 +1,6 @@
+# LOCAL RUNNING INSTRUCTIONS (applicable only when not using the direct Streamlit link)
+# Run this command in one instance of powershell terminal "uvicorn backend:app --reload --port 8000"
+
 import os
 import shutil
 import platform
