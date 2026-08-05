@@ -297,16 +297,15 @@ elif page == "2. Mind Map & Investigation Hub":
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
-                                    conn = get_db_connection()
-                                    c = conn.cursor()
-                                    c.execute("INSERT INTO audit_logs (case_id, action) VALUES (?, ?)", 
-                                              (case_id_input, f"[DIARY ENTRY]: {diary_text}"))
-                                    conn.commit()
-                                    conn.close()
-                                    st.success("Case diary entry successfully logged to database!")
-                                    st.rerun()
+                                    payload = {"case_id": case_id_input, "entry": f"[DIARY ENTRY]: {diary_text}"}
+                                    res = requests.post(f"{API_URL}/save_diary", data=payload)
+                                    if res.status_code == 200:
+                                        st.success("Case diary entry successfully logged!")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Server error: {res.text}")
                                 except Exception as e:
-                                    st.error(f"Database error: {e}")
+                                    st.error(f"Backend connection error: {e}")
                             else:
                                 st.warning("Please enter some text before saving.")
             else:
