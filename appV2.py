@@ -301,15 +301,28 @@ elif page == "2. Mind Map & Investigation Hub":
                                 st.success("Request generated and logged to audit trail!")
 
                     with tab3:
-                        st.write("#### Case Diary Entries (Voice / Text)")
-                        diary_text = st.text_area("New Diary Entry (Hindi / English)", "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage.")
+                        st.write("#### Multimodal Case Diary Entries (Voice or Text)")
+                        
+                        audio_val = st.audio_input("🎙️ Record Voice Diary Note")
+                        
+                        default_text = "Suspect identified near ATM location in Rohini, Delhi. Requesting CCTV footage."
+                        
+                        if audio_val is not None:
+                            try:
+                                files = {"file": ("audio.wav", audio_val.getvalue(), "audio/wav")}
+                                r = requests.post(f"{API_URL}/transcribe_audio", files=files).json()
+                                if r.get("status") == "success":
+                                    default_text += f"\n[Voice Transcription]: {r.get('text')}"
+                            except Exception:
+                                pass
+
+                        diary_text = st.text_area("Case Diary Text Entry", value=default_text, height=180)
                         
                         if st.button("Save Diary Entry"):
                             if diary_text.strip():
                                 try:
                                     conn = get_db_connection()
                                     c = conn.cursor()
-                                    # Ensure table exists before inserting
                                     c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
                                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                 case_id TEXT, action TEXT, 
