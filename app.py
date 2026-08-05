@@ -178,7 +178,7 @@ if page == "1. Case Creation & OCR":
         with st.form("case_form"):
             c1, c2 = st.columns(2)
             with c1:
-                case_id = st.text_input("Case ID", value=data.get("case_id", "CC/2026/0701/000123"))
+                case_id = st.text_input("Case ID", value=data.get("case_id", ""))
                 ack_no = st.text_input("Acknowledgment No.", value=data.get("ack_no", ""))
                 fir_no = st.text_input("FIR No.", value=data.get("fir_no", ""))
                 victim_name = st.text_input("Victim Name", value=data.get("victim_name", ""))
@@ -231,7 +231,7 @@ elif page == "2. Mind Map & Investigation Hub":
     
     col_input, col_status = st.columns([3, 1])
     with col_input:
-        case_id_input = st.text_input("Active Case ID:", "CC/2026/0701/000123")
+        case_id_input = st.text_input("Active Case ID:", "")
     with col_status:
         st.markdown("<br>", unsafe_allow_html=True)
         load_btn = st.button("Load Investigation Workspace", use_container_width=True)
